@@ -112,7 +112,7 @@ const SignupPage = () => {
   const handleCheckEmail = async () => {
     if (!email) return;
     try {
-      const res = await fetch(`http://localhost:3000/auth/check-email?email=${email}`);
+      const res = await fetch(`${API_URL}/auth/check-email?email=${email}`);
       const data = await res.json();
       if (data.available) {
         setEmailCheck({ checked: true, available: true, message: '사용 가능한 이메일입니다.' });
@@ -128,7 +128,7 @@ const SignupPage = () => {
   const handleCheckNickname = async () => {
     if (!nickname) return;
     try {
-      const res = await fetch(`http://localhost:3000/auth/check-nickname?nickname=${nickname}`);
+      const res = await fetch(`${API_URL}/auth/check-nickname?nickname=${nickname}`);
       const data = await res.json();
       if (data.available) {
         setNicknameCheck({ checked: true, available: true, message: '사용 가능한 닉네임입니다.' });

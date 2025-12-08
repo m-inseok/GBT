@@ -16,6 +16,7 @@ import PostCreatePage from './pages/PostCreatePage';
 import PostDetailPage from './pages/PostDetailPage';
 import ChatListPage from './pages/ChatListPage';
 import ChatRoomPage from './pages/ChatRoomPage';
+import PrivateRoute from './components/PrivateRoute';
 import GlobalStyles from './styles/GlobalStyles';
 
 const App = () => {
@@ -23,23 +24,23 @@ const App = () => {
     <Router>
       <GlobalStyles />
       <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/community" element={<CommunityPage />} />
-        <Route path="/community/create" element={<PostCreatePage />} />
-        <Route path="/community/post/:id" element={<PostDetailPage />} /> {/* Added PostDetailPage route */}
-        <Route path="/chat" element={<ChatListPage />} />
-        <Route path="/chat/:id" element={<ChatRoomPage />} />
+        <Route path="/" element={<PrivateRoute><MainPage /></PrivateRoute>} />
+        <Route path="/community" element={<PrivateRoute><CommunityPage /></PrivateRoute>} />
+        <Route path="/community/create" element={<PrivateRoute><PostCreatePage /></PrivateRoute>} />
+        <Route path="/community/post/:id" element={<PrivateRoute><PostDetailPage /></PrivateRoute>} />
+        <Route path="/chat" element={<PrivateRoute><ChatListPage /></PrivateRoute>} />
+        <Route path="/chat/:id" element={<PrivateRoute><ChatRoomPage /></PrivateRoute>} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/mypage" element={<MyPage />} />
-        <Route path="/profile-settings" element={<ProfileSettingsPage />} />
-        <Route path="/learning" element={<LearningPage />} />
-        <Route path="/learning/:id" element={<LectureDetailPage />} />
-        <Route path="/quiz" element={<QuizCategoryPage />} />
-        <Route path="/quiz/:category" element={<QuizListPage />} />
-        <Route path="/quiz/:category/:id" element={<QuizPage />} />
-        <Route path="/pronunciation" element={<PronunciationPage />} />
-        <Route path="/hospital/:id" element={<HospitalDetailPage />} />
+        <Route path="/mypage" element={<PrivateRoute><MyPage /></PrivateRoute>} />
+        <Route path="/profile-settings" element={<PrivateRoute><ProfileSettingsPage /></PrivateRoute>} />
+        <Route path="/learning" element={<PrivateRoute><LearningPage /></PrivateRoute>} />
+        <Route path="/learning/:id" element={<PrivateRoute><LectureDetailPage /></PrivateRoute>} />
+        <Route path="/quiz" element={<PrivateRoute><QuizCategoryPage /></PrivateRoute>} />
+        <Route path="/quiz/:category" element={<PrivateRoute><QuizListPage /></PrivateRoute>} />
+        <Route path="/quiz/:category/:id" element={<PrivateRoute><QuizPage /></PrivateRoute>} />
+        <Route path="/pronunciation" element={<PrivateRoute><PronunciationPage /></PrivateRoute>} />
+        <Route path="/hospital/:id" element={<PrivateRoute><HospitalDetailPage /></PrivateRoute>} />
       </Routes>
     </Router>
   );
