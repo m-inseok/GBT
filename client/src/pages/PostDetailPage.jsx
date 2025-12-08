@@ -242,7 +242,7 @@ const PostDetailPage = () => {
       const userData = userStr ? JSON.parse(userStr) : null;
       const emailQuery = userData ? `?email=${userData.email}` : '';
 
-      const res = await fetch(`http://localhost:3000/posts/${id}${emailQuery}`);
+      const res = await fetch(`${API_URL}/posts/${id}${emailQuery}`);
       if (res.ok) {
         setPost(await res.json());
       }
@@ -253,7 +253,7 @@ const PostDetailPage = () => {
 
   const fetchComments = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/posts/${id}/comments`);
+      const res = await fetch(`${API_URL}/posts/${id}/comments`);
       if (res.ok) {
         setComments(await res.json());
       }
@@ -274,7 +274,7 @@ const PostDetailPage = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:3000/posts/${id}/like`, {
+      const res = await fetch(`${API_URL}/posts/${id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -317,7 +317,7 @@ const PostDetailPage = () => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/posts/${id}`, {
+      const res = await fetch(`${API_URL}/posts/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
