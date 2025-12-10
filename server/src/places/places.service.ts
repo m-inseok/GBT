@@ -34,8 +34,14 @@ export class PlacesService implements OnModuleInit {
     }
 
     async seedPlaces() {
-        await this.reviewsRepository.clear(); // Clear reviews first to avoid foreign key constraints
-        await this.placesRepository.clear(); // Clear existing data to avoid duplicates
+        const count = await this.placesRepository.count();
+        if (count > 0) {
+            console.log('Places already exist, skipping seed.');
+            return;
+        }
+
+        // await this.reviewsRepository.clear(); // Commented out to preserve data
+        // await this.placesRepository.clear(); // Commented out to preserve data
 
         const places = [
             // User's Location Area (37.3323, 127.2651)
