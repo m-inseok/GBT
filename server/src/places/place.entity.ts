@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Review } from './review.entity';
 
 export enum PlaceCategory {
     MEDICAL = 'medical',
@@ -48,4 +49,7 @@ export class Place {
 
     @Column({ nullable: true })
     closingTime: string;
+
+    @OneToMany(() => Review, (review) => review.place)
+    reviews: Review[];
 }

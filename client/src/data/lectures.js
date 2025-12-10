@@ -1,9 +1,17 @@
+import img1 from '../assets/pandainkl_A_female_Korean_OPIC_tutor_in_her_30s_or_40s_photog_e4bb2b59-d873-401b-ba17-e6a15f673b7b_0.png';
+import img2 from '../assets/pandainkl_One_30-something_Korean_female_academy_instructor_w_2acf4162-4607-44f7-92f1-9d453df5914c_0.png';
+import img3 from '../assets/pandainkl_cinematic_interview_style_professional_lighting_sha_8ed9f2c3-0c52-40d3-b3e4-7dfb3795c8b7_0.png';
+import img4 from '../assets/pandainkl_a_young_Asian_male_teacher_in_his_twenties_standing_fed2eac9-70d6-483b-9273-819c55cbcc8f_1.png';
+import img5 from '../assets/pandainkl_A_smiling_female_teacher_stands_in_front_of_the_bla_ec8bdf0b-ea63-4b00-9a90-85d326433664_3.png';
+import img6 from '../assets/pandainkl_a_realistic_friendly_female_teacher_with_one_full_a_2c82f97c-d2d3-4366-bebb-93139734ee23_1.png';
+import img7 from '../assets/pandainkl_Korean_female_teacher_with_brown_long_hair_in_sky_blu_f046c281-633d-46ea-9035-235f2e9bae45.png';
+
 export const lectures = [
     {
         id: 1,
         title: '토익 700->900 단기 돌파 전략 - 빈출 문제 완전 분석',
         instructor: 'Aloha Morgan',
-        image: 'https://placehold.co/160x100',
+        image: img1,
         level: '중급 ~ 고급',
         duration: '12시간 30분',
         access: '무제한',
@@ -34,7 +42,7 @@ export const lectures = [
         id: 2,
         title: '한글부터 간단한 말하기까지, 한국어 완전 초보를 위한 시작 클래스',
         instructor: 'Minji Lee',
-        image: 'https://placehold.co/160x100',
+        image: img2,
         level: '기초 ~ 초급',
         duration: '8시간 15분',
         access: '무제한',
@@ -79,7 +87,7 @@ export const lectures = [
         id: 3,
         title: '비즈니스 한국어 마스터 클래스',
         instructor: 'David Kim',
-        image: 'https://placehold.co/160x100',
+        image: img3,
         level: '중급 ~ 고급',
         duration: '10시간',
         access: '무제한',
@@ -112,7 +120,7 @@ export const lectures = [
         id: 4,
         title: '알파벳이 아닌 한글! 쉽게 배우는 한글 구조와 발음의 모든 것',
         instructor: '박서준',
-        image: 'https://placehold.co/160x100',
+        image: img4,
         level: '입문',
         duration: '5시간',
         access: '무제한',
@@ -143,7 +151,7 @@ export const lectures = [
         id: 5,
         title: '자음·모음 발음부터 읽기까지, 짧은 시간에 끝내는 한국어 입문 코스',
         instructor: '이다은',
-        image: 'https://placehold.co/160x100',
+        image: img5,
         level: '입문 ~ 초급',
         duration: '6시간 30분',
         access: '무제한',
@@ -174,7 +182,7 @@ export const lectures = [
         id: 6,
         title: '시험에 진짜 나오는 TOPIK 어휘만 골라 정리한 단어 집중 클래스',
         instructor: 'Grace Miller',
-        image: 'https://placehold.co/280x160',
+        image: img6,
         level: '초급 ~ 중급',
         duration: '15시간',
         access: '무제한',
@@ -207,7 +215,7 @@ export const lectures = [
         id: 7,
         title: 'TOPIK II 듣기·읽기 고득점을 위한 집중 실전 공략반',
         instructor: 'Emma Davis',
-        image: 'https://placehold.co/280x160',
+        image: img7,
         level: '고급',
         duration: '20시간',
         access: '무제한',
@@ -235,5 +243,5 @@ export const lectures = [
             '9강 실전 모의고사 (듣기)',
             '10강 실전 모의고사 (읽기)'
         ]
-    }
+    },
 ];

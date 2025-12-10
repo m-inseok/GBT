@@ -2,13 +2,31 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Place, PlaceCategory } from './place.entity';
+import { Review } from './review.entity';
+import { User } from '../auth/user.entity';
+import { ConfigService } from '@nestjs/config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @Injectable()
 export class PlacesService implements OnModuleInit {
+    private genAI: GoogleGenerativeAI;
+    private model: any;
+
     constructor(
         @InjectRepository(Place)
         private placesRepository: Repository<Place>,
-    ) { }
+        @InjectRepository(Review)
+        private reviewsRepository: Repository<Review>,
+        @InjectRepository(User)
+        private usersRepository: Repository<User>,
+        private configService: ConfigService
+    ) {
+        const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+        if (apiKey) {
+            this.genAI = new GoogleGenerativeAI(apiKey);
+            this.model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+        }
+    }
 
     async onModuleInit() {
         // Force re-seed for development to include new test data
@@ -16,6 +34,7 @@ export class PlacesService implements OnModuleInit {
     }
 
     async seedPlaces() {
+        await this.reviewsRepository.clear(); // Clear reviews first to avoid foreign key constraints
         await this.placesRepository.clear(); // Clear existing data to avoid duplicates
 
         const places = [
@@ -27,7 +46,7 @@ export class PlacesService implements OnModuleInit {
                 longitude: 127.2661,
                 address: '경기도 용인시 처인구',
                 tags: ['보건소', '예방접종'],
-                image: 'https://via.placeholder.com/300x150',
+                image: '/place_images/Yongin Cheoin-gu Health Center.jpg',
                 rating: 4.5,
                 reviewCount: 50,
                 status: '영업중',
@@ -40,7 +59,7 @@ export class PlacesService implements OnModuleInit {
                 longitude: 127.2641,
                 address: '경기도 용인시 처인구',
                 tags: ['종합병원', '응급실'],
-                image: 'https://via.placeholder.com/300x150',
+                image: '/place_images/Yongin Severance Hospital.jpg',
                 rating: 4.8,
                 reviewCount: 200,
                 status: '영업중',
@@ -53,7 +72,7 @@ export class PlacesService implements OnModuleInit {
                 longitude: 127.2671,
                 address: '경기도 용인시 처인구',
                 tags: ['ATM', '대출상담'],
-                image: 'https://via.placeholder.com/300x150',
+                image: '/place_images/KB Kookmin Bank Yongin.jpg',
                 rating: 4.2,
                 reviewCount: 30,
                 status: '영업중',
@@ -66,7 +85,7 @@ export class PlacesService implements OnModuleInit {
                 longitude: 127.2631,
                 address: '경기도 용인시 처인구',
                 tags: ['환전', '자산관리'],
-                image: 'https://via.placeholder.com/300x150',
+                image: '/place_images/Woori Bank Cheoin-gu Office.jpg',
                 rating: 4.0,
                 reviewCount: 25,
                 status: '영업중',
@@ -79,7 +98,7 @@ export class PlacesService implements OnModuleInit {
                 longitude: 127.2656,
                 address: '경기도 용인시 처인구',
                 tags: ['아파트', '신축'],
-                image: 'https://via.placeholder.com/300x150',
+                image: '/place_images/Yeokbuk Sinwon Morning Cityjpg.jpg',
                 rating: 4.7,
                 reviewCount: 10,
                 status: '영업중',
@@ -92,7 +111,7 @@ export class PlacesService implements OnModuleInit {
                 longitude: 127.2646,
                 address: '경기도 용인시 처인구',
                 tags: ['아파트', '역세권'],
-                image: 'https://via.placeholder.com/300x150',
+                image: '/place_images/Yongin Myongji Univ. Station Kolon Haneulchae.jpg',
                 rating: 4.6,
                 reviewCount: 15,
                 status: '영업중',
@@ -272,6 +291,71 @@ export class PlacesService implements OnModuleInit {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const d = R * c; // Distance in km
         return d;
+    }
+
+    async findOne(id: number): Promise<Place | null> {
+        return this.placesRepository.findOne({ where: { id } });
+    }
+
+    async createReview(placeId: number, userEmail: string, content: string, rating: number): Promise<Review> {
+        const place = await this.placesRepository.findOne({ where: { id: placeId } });
+        if (!place) {
+            throw new Error('Place not found');
+        }
+
+        const user = await this.usersRepository.findOne({ where: { email: userEmail } });
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        const review = this.reviewsRepository.create({
+            content,
+            rating,
+            place,
+            user
+        });
+
+        const savedReview = await this.reviewsRepository.save(review);
+
+        // Update place rating and review count
+        const reviews = await this.reviewsRepository.find({ where: { place: { id: placeId } } });
+        const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+        place.rating = parseFloat((totalRating / reviews.length).toFixed(1));
+        place.reviewCount = reviews.length;
+        await this.placesRepository.save(place);
+
+        return savedReview;
+    }
+
+    async getReviews(placeId: number): Promise<Review[]> {
+        return this.reviewsRepository.find({
+            where: { place: { id: placeId } },
+            order: { createdAt: 'DESC' },
+            relations: ['user']
+        });
+    }
+
+    async getReviewSummary(placeId: number): Promise<string> {
+        if (!this.model) {
+            return "Review summary unavailable (API Key missing).";
+        }
+
+        const reviews = await this.getReviews(placeId);
+        if (reviews.length === 0) {
+            return "No reviews to summarize.";
+        }
+
+        const reviewTexts = reviews.map(r => r.content).join("\n");
+        const prompt = `Summarize the following reviews for a place in Korean. Focus on the main pros and cons mentioned by users. Keep it concise (2-3 sentences).\n\nReviews:\n${reviewTexts}`;
+
+        try {
+            const result = await this.model.generateContent(prompt);
+            const response = await result.response;
+            return response.text();
+        } catch (error) {
+            console.error("Gemini API Error:", error);
+            return "Failed to generate summary.";
+        }
     }
 
     private deg2rad(deg: number): number {

@@ -217,6 +217,11 @@ const LearningPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Import images for carousel
+  const carouselImg1 = React.useMemo(() => new URL('../assets/pandainkl_A_Korean_woman_in_her_30s_in_a_neat_suit_with_long__f98c1f55-0f6f-4815-bb6f-72939762bdd5_3.png', import.meta.url).href, []);
+  const carouselImg2 = React.useMemo(() => new URL('../assets/pandainkl_Poster_design_a_young_Korean_male_and_female_teache_24eb7cad-7e7e-4c24-b669-f0aa7ee26f9a_2.png', import.meta.url).href, []);
+  const carouselImg3 = React.useMemo(() => new URL('../assets/pandainkl_a_professional_profile_photo_of_a_40-year-old_Korea_cd2a85d7-9cf0-4713-a5f1-ed00d1ab72a1_0.png', import.meta.url).href, []);
+
   return (
     <Container>
       <TopSection>
@@ -231,21 +236,21 @@ const LearningPage = () => {
         <CarouselContainer>
           <CarouselTrack $offset={-currentSlide * 100}>
             <CarouselItem>
-              <CarouselImage src="https://placehold.co/400x220" />
+              <CarouselImage src={carouselImg1} />
               <CarouselOverlay>
                 <CarouselTitle>TOPIK 합격까지</CarouselTitle>
                 <CarouselSubtitle>당신의 한국어 여정을 함께합니다</CarouselSubtitle>
               </CarouselOverlay>
             </CarouselItem>
             <CarouselItem>
-              <CarouselImage src="https://placehold.co/400x220" />
+              <CarouselImage src={carouselImg2} />
               <CarouselOverlay>
                 <CarouselTitle>한국어 회화 마스터</CarouselTitle>
                 <CarouselSubtitle>원어민처럼 말하기 도전!</CarouselSubtitle>
               </CarouselOverlay>
             </CarouselItem>
             <CarouselItem>
-              <CarouselImage src="https://placehold.co/400x220" />
+              <CarouselImage src={carouselImg3} />
               <CarouselOverlay>
                 <CarouselTitle>비즈니스 한국어</CarouselTitle>
                 <CarouselSubtitle>취업 성공을 위한 필수 코스</CarouselSubtitle>

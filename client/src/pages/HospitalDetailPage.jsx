@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Star, Share2, MoreHorizontal, MapPin, Clock, Globe, Phone, Copy, ChevronRight, Bookmark } from 'lucide-react';
+import { API_URL } from '../config';
 
 const Container = styled.div`
   display: flex;
@@ -55,6 +56,7 @@ const ImageSection = styled.div`
   width: 100%;
   height: 250px;
   position: relative;
+  background-color: #f0f0f0;
 `;
 
 const MainImage = styled.img`
@@ -347,175 +349,342 @@ const ActionButton = styled.button`
 `;
 
 const HospitalDetailPage = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('홈');
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('홈');
+  const [hospital, setHospital] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState([]);
+  const [summary, setSummary] = useState('');
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewContent, setReviewContent] = useState('');
+  const [reviewRating, setReviewRating] = useState(5);
 
-    // Mock Data (In a real app, fetch based on ID)
-    const hospital = {
-        name: '의료법인 영훈의료재단 대전선병원',
-        rating: 5.0,
-        reviewCount: 145,
-        status: '영업중',
-        closingTime: '22:00',
-        distance: '1.1km',
-        address: '대전 중구 목중로 29 선병원',
-        tags: ['외국인 친화적', '영어 가능', '민생회복소비쿠폰'],
-        image: 'https://placehold.co/400x250',
-        phone: '042-123-4567',
-        website: 'www.abcd.kr'
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+
+  useEffect(() => {
+    const fetchPlaceData = async () => {
+      try {
+        const [placeRes, reviewsRes, summaryRes] = await Promise.all([
+          fetch(`${API_URL}/places/${id}`),
+          fetch(`${API_URL}/places/${id}/reviews`),
+          fetch(`${API_URL}/places/${id}/summary`)
+        ]);
+
+        if (placeRes.ok) {
+          const data = await placeRes.json();
+          setHospital(data);
+        }
+
+        if (reviewsRes.ok) {
+          const reviewsData = await reviewsRes.json();
+          setReviews(reviewsData);
+        }
+
+        if (summaryRes.ok) {
+          const summaryData = await summaryRes.text(); // Summary returns plain text
+          setSummary(summaryData);
+        }
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    return (
-        <Container>
-            <Header>
-                <BackButton onClick={() => navigate(-1)}>
-                    <ChevronLeft size={24} color="#333" />
-                </BackButton>
-                <HeaderActions>
-                    <HeaderAction>
-                        <Share2 size={20} color="#333" />
-                    </HeaderAction>
-                    <HeaderAction>
-                        <MoreHorizontal size={20} color="#333" />
-                    </HeaderAction>
-                </HeaderActions>
-            </Header>
+    fetchPlaceData();
+  }, [id]);
 
-            <ImageSection>
-                <MainImage src={hospital.image} />
-                <ImageDots>
-                    <Dot $active />
-                    <Dot />
-                    <Dot />
-                </ImageDots>
-            </ImageSection>
+  const handleReviewSubmit = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
 
-            <ContentContainer>
-                <TitleSection>
-                    <TitleRow>
-                        <CategoryBadge>🏥</CategoryBadge>
-                        <Title>{hospital.name}</Title>
-                    </TitleRow>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <Rating>
-                            <Star size={16} fill="#ff6b00" />
-                            {hospital.rating}
-                            <ReviewCount>({hospital.reviewCount})</ReviewCount>
-                        </Rating>
-                    </div>
-                    <StatusRow>
-                        <Status>{hospital.status}</Status> · {hospital.closingTime}에 영업 종료
-                    </StatusRow>
-                    <AddressRow>
-                        {hospital.distance} · {hospital.address.split(' ')[0] + ' ' + hospital.address.split(' ')[1]}
-                    </AddressRow>
-                    <TagRow>
-                        {hospital.tags.map((tag, index) => (
-                            <Tag key={index}>{tag}</Tag>
-                        ))}
-                        <Tag>...</Tag>
-                    </TagRow>
-                </TitleSection>
+    try {
+      const res = await fetch(`${API_URL}/places/${id}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: user.email,
+          content: reviewContent,
+          rating: reviewRating
+        }),
+      });
 
-                <TabContainer>
-                    <Tab $active={activeTab === '홈'} onClick={() => setActiveTab('홈')}>홈</Tab>
-                    <Tab $active={activeTab === '리뷰'} onClick={() => setActiveTab('리뷰')}>리뷰</Tab>
-                    <Tab $active={activeTab === '사진'} onClick={() => setActiveTab('사진')}>사진</Tab>
-                </TabContainer>
+      if (res.ok) {
+        alert('리뷰가 등록되었습니다!');
+        setIsReviewModalOpen(false);
+        setReviewContent('');
+        setReviewRating(5);
 
-                {activeTab === '홈' && (
-                    <>
-                        <Section>
-                            <InfoItem>
-                                <InfoLabel><Clock size={18} /></InfoLabel>
-                                <InfoContent>
-                                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>영업중 · 오전 11:00 영업시작</div>
-                                    <div style={{ fontSize: '0.85rem', color: '#666' }}>
-                                        <div>목 09:00 - 18:30</div>
-                                        <div style={{ paddingLeft: '10px' }}>12:30 - 14:00 휴게시간</div>
-                                        <div>금 09:00 - 18:30</div>
-                                        <div style={{ paddingLeft: '10px' }}>12:30 - 14:00 휴게시간</div>
-                                        {/* More hours... */}
-                                    </div>
-                                </InfoContent>
-                                <ChevronRight size={16} color="#ccc" />
-                            </InfoItem>
-                        </Section>
+        // Refresh reviews and summary
+        const reviewsRes = await fetch(`${API_URL}/places/${id}/reviews`);
+        if (reviewsRes.ok) setReviews(await reviewsRes.json());
 
-                        <Section>
-                            <InfoItem>
-                                <InfoLabel><MapPin size={18} /></InfoLabel>
-                                <InfoContent>{hospital.address}</InfoContent>
-                                <CopyButton><Copy size={16} /></CopyButton>
-                            </InfoItem>
-                            <InfoItem>
-                                <InfoLabel><Globe size={18} /></InfoLabel>
-                                <InfoContent>{hospital.website}</InfoContent>
-                            </InfoItem>
-                            <InfoItem>
-                                <InfoLabel><Phone size={18} /></InfoLabel>
-                                <InfoContent>{hospital.phone}</InfoContent>
-                                <CopyButton><Copy size={16} /></CopyButton>
-                            </InfoItem>
-                        </Section>
+        // Optionally refresh summary (might take time/cost, so maybe not every time on production)
+        const summaryRes = await fetch(`${API_URL}/places/${id}/summary`);
+        if (summaryRes.ok) setSummary(await summaryRes.text());
 
-                        <ReviewSection>
-                            <ReviewHeader>
-                                <ReviewTitle>리뷰 ({hospital.reviewCount})</ReviewTitle>
-                            </ReviewHeader>
-                            <ReviewNotice>
-                                <Star size={20} fill="#ff6b00" style={{ flexShrink: 0 }} />
-                                현재 병원 시설은 전체적으로 깔끔하고 안내 직원부터 의료진까지 모두 친절해서 처음 방문하시는 분들이라면 좋은 병원입니다.
-                            </ReviewNotice>
+      } else {
+        alert('리뷰 등록 실패');
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert('오류가 발생했습니다.');
+    }
+  };
 
-                            <ReviewItem>
-                                <ReviewUser>
-                                    <UserImage src="https://placehold.co/40" />
-                                    <UserInfo>
-                                        <UserName>김규남 <Star size={12} fill="#ff6b00" style={{ marginLeft: '4px' }} /> 5.0</UserName>
-                                        <UserMeta>1번째 방문 · 25.11.07</UserMeta>
-                                    </UserInfo>
-                                    <MoreHorizontal size={16} color="#ccc" />
-                                </ReviewUser>
-                                <ReviewText>
-                                    목뒤가 너무 아파서 방문했어요. 데스크 원장님 치료실선생님들 짱짱짱 친절해요. 초음파도 생긴거같은데 담번엔 초음파도 받아봐야겠어요...
-                                </ReviewText>
-                            </ReviewItem>
+  if (loading) return <div>Loading...</div>;
+  if (!hospital) return <div>Place not found</div>;
 
-                            <ReviewItem>
-                                <ReviewUser>
-                                    <UserImage src="https://placehold.co/40" />
-                                    <UserInfo>
-                                        <UserName>오도릴리 <Star size={12} fill="#ff6b00" style={{ marginLeft: '4px' }} /> 5.0</UserName>
-                                        <UserMeta>1번째 방문 · 25.11.06</UserMeta>
-                                    </UserInfo>
-                                    <MoreHorizontal size={16} color="#ccc" />
-                                </ReviewUser>
-                                <ReviewText>
-                                    처방도 과하게 하지 않으시고 꼭 필요한 치료만 권해주셔서 믿음이 갔고요. 병원 내부도 카페처럼 깨끗하고 아늑해서...
-                                </ReviewText>
-                            </ReviewItem>
+  // Default values if missing
+  const phone = hospital.phone || '031-000-0000';
+  const website = hospital.website || '-';
+  const displayAddress = hospital.address || '';
 
-                            <MoreReviews>리뷰 더보기</MoreReviews>
-                        </ReviewSection>
-                    </>
-                )}
-            </ContentContainer>
+  return (
+    <Container>
+      <Header>
+        <BackButton onClick={() => navigate(-1)}>
+          <ChevronLeft size={24} color="#333" />
+        </BackButton>
+        <HeaderActions>
+          <HeaderAction>
+            <Share2 size={20} color="#333" />
+          </HeaderAction>
+          <HeaderAction>
+            <MoreHorizontal size={20} color="#333" />
+          </HeaderAction>
+        </HeaderActions>
+      </Header>
 
-            <BottomBar>
-                <ActionButton>
-                    <Bookmark size={24} />
-                </ActionButton>
-                <ActionButton>
-                    <Share2 size={24} />
-                </ActionButton>
-                <ActionButton $primary $wide>
-                    출발
-                </ActionButton>
-            </BottomBar>
-        </Container>
-    );
+      <ImageSection>
+        {hospital.image && <MainImage src={hospital.image} />}
+        <ImageDots>
+          <Dot $active />
+          <Dot />
+          <Dot />
+        </ImageDots>
+      </ImageSection>
+
+      <ContentContainer>
+        <TitleSection>
+          <TitleRow>
+            <CategoryBadge>🏥</CategoryBadge>
+            <Title>{hospital.name}</Title>
+          </TitleRow>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <Rating>
+              <Star size={16} fill="#ff6b00" />
+              {hospital.rating?.toFixed(1) || '0.0'}
+              <ReviewCount>({hospital.reviewCount || 0})</ReviewCount>
+            </Rating>
+          </div>
+          <StatusRow>
+            <Status>{hospital.status}</Status> · {hospital.closingTime}에 영업 종료
+          </StatusRow>
+          <AddressRow>
+            {displayAddress}
+          </AddressRow>
+          <TagRow>
+            {hospital.tags?.map((tag, index) => (
+              <Tag key={index}>{tag}</Tag>
+            ))}
+          </TagRow>
+        </TitleSection>
+
+        <TabContainer>
+          <Tab $active={activeTab === '홈'} onClick={() => setActiveTab('홈')}>홈</Tab>
+          <Tab $active={activeTab === '리뷰'} onClick={() => setActiveTab('리뷰')}>리뷰</Tab>
+          <Tab $active={activeTab === '사진'} onClick={() => setActiveTab('사진')}>사진</Tab>
+        </TabContainer>
+
+        {activeTab === '홈' && (
+          <>
+            <Section>
+              <InfoItem>
+                <InfoLabel><Clock size={18} /></InfoLabel>
+                <InfoContent>
+                  <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{hospital.status} · {hospital.closingTime} 영업 종료</div>
+                  <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                    <div>운영시간 정보 없음</div>
+                  </div>
+                </InfoContent>
+                <ChevronRight size={16} color="#ccc" />
+              </InfoItem>
+            </Section>
+
+            <Section>
+              <InfoItem>
+                <InfoLabel><MapPin size={18} /></InfoLabel>
+                <InfoContent>{displayAddress}</InfoContent>
+                <CopyButton><Copy size={16} /></CopyButton>
+              </InfoItem>
+              <InfoItem>
+                <InfoLabel><Globe size={18} /></InfoLabel>
+                <InfoContent>{website}</InfoContent>
+              </InfoItem>
+              <InfoItem>
+                <InfoLabel><Phone size={18} /></InfoLabel>
+                <InfoContent>{phone}</InfoContent>
+                <CopyButton><Copy size={16} /></CopyButton>
+              </InfoItem>
+            </Section>
+
+            <ReviewSection>
+              <ReviewHeader>
+                <ReviewTitle>리뷰 ({reviews.length})</ReviewTitle>
+              </ReviewHeader>
+              <ReviewNotice>
+                <Star size={20} fill="#ff6b00" style={{ flexShrink: 0 }} />
+                {summary || "리뷰 요약을 불러오는 중이거나 리뷰가 없습니다."}
+              </ReviewNotice>
+
+              <MoreReviews onClick={() => setActiveTab('리뷰')}>리뷰 전체보기</MoreReviews>
+            </ReviewSection>
+          </>
+        )}
+
+        {activeTab === '리뷰' && (
+          <ReviewSection>
+            <ReviewHeader>
+              <ReviewTitle>리뷰 ({reviews.length})</ReviewTitle>
+              <button
+                onClick={() => setIsReviewModalOpen(true)}
+                style={{
+                  padding: '8px 12px',
+                  backgroundColor: '#ff6b00',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                리뷰 작성
+              </button>
+            </ReviewHeader>
+
+            {reviews.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 0', color: '#888' }}>
+                아직 작성된 리뷰가 없습니다.
+              </div>
+            ) : (
+              reviews.map((review) => (
+                <ReviewItem key={review.id}>
+                  <ReviewUser>
+                    <UserImage src="https://placehold.co/40" />
+                    <UserInfo>
+                      <UserName>
+                        {review.user?.nickname || '익명'}
+                        <Star size={12} fill="#ff6b00" style={{ marginLeft: '4px' }} />
+                        {review.rating.toFixed(1)}
+                      </UserName>
+                      <UserMeta>
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </UserMeta>
+                    </UserInfo>
+                    <MoreHorizontal size={16} color="#ccc" />
+                  </ReviewUser>
+                  <ReviewText>
+                    {review.content}
+                  </ReviewText>
+                </ReviewItem>
+              ))
+            )}
+          </ReviewSection>
+        )}
+      </ContentContainer>
+
+      <BottomBar>
+        <ActionButton>
+          <Bookmark size={24} />
+        </ActionButton>
+        <ActionButton>
+          <Share2 size={24} />
+        </ActionButton>
+        <ActionButton $primary $wide>
+          출발
+        </ActionButton>
+      </BottomBar>
+
+      {/* Review Modal */}
+      {isReviewModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          zIndex: 100
+        }} onClick={() => setIsReviewModalOpen(false)}>
+          <div style={{
+            backgroundColor: 'white',
+            width: '90%', maxWidth: '400px',
+            padding: '20px', borderRadius: '16px'
+          }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 20px 0', textAlign: 'center' }}>리뷰 작성</h3>
+
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', gap: '5px' }}>
+              {[1, 2, 3, 4, 5].map(star => (
+                <Star
+                  key={star}
+                  size={32}
+                  fill={star <= reviewRating ? "#ff6b00" : "#ddd"}
+                  color={star <= reviewRating ? "#ff6b00" : "#ddd"}
+                  onClick={() => setReviewRating(star)}
+                  style={{ cursor: 'pointer' }}
+                />
+              ))}
+            </div>
+
+            <textarea
+              style={{
+                width: '100%', height: '100px',
+                padding: '10px', borderRadius: '8px',
+                border: '1px solid #ddd', resize: 'none',
+                marginBottom: '20px', outline: 'none'
+              }}
+              placeholder="이 장소에 대한 솔직한 리뷰를 남겨주세요."
+              value={reviewContent}
+              onChange={e => setReviewContent(e.target.value)}
+            />
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setIsReviewModalOpen(false)}
+                style={{
+                  flex: 1, height: '48px',
+                  border: 'none', borderRadius: '8px',
+                  backgroundColor: '#f0f0f0', color: '#555',
+                  fontWeight: 'bold', cursor: 'pointer'
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleReviewSubmit}
+                style={{
+                  flex: 1, height: '48px',
+                  border: 'none', borderRadius: '8px',
+                  backgroundColor: '#ff6b00', color: 'white',
+                  fontWeight: 'bold', cursor: 'pointer'
+                }}
+              >
+                등록
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Container>
+  );
 };
 
 export default HospitalDetailPage;
